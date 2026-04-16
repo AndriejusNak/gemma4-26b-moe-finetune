@@ -1,0 +1,15 @@
+# Gemma 4 26B MoE Fine-Tuning — Dependencies
+# Tested on Python 3.11+ / CUDA 12.x / RTX 3090 24GB
+#
+# Install: pip install -r requirements.txt
+# Note: Install PyTorch first matching your CUDA version:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu124
+
+torch>=2.4.0
+transformers>=4.52.0
+peft>=0.14.0
+bitsandbytes>=0.45.0
+accelerate>=1.2.0
+huggingface_hub>=0.27.0
+sentencepiece>=0.2.0
+safetensors>=0.4.0

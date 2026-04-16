@@ -1,0 +1,29 @@
+# Ollama Modelfile for fine-tuned Gemma 4 26B MoE (Q4_K_M)
+# 
+# Usage:
+#   ollama create gemma4-finetuned -f Modelfile.example
+#   ollama run gemma4-finetuned
+#
+# Prerequisites:
+#   - Run pipeline phases 0-4 to produce the GGUF file
+#   - Adjust the FROM path to your actual GGUF location
+
+FROM ./merged_models/model-q4_k_m.gguf
+
+# Generation parameters
+PARAMETER temperature 0.3
+PARAMETER top_p 0.9
+PARAMETER num_predict 4096
+PARAMETER num_ctx 8192
+
+# GPU offloading — use 99 for full GPU (recommended for 24GB+)
+# Reduce if you have less VRAM (e.g., 20 for 12GB cards)
+PARAMETER num_gpu 99
+
+# System prompt (customize for your use case)
+SYSTEM """You are a server operations assistant. You have access to diagnostic tools:
+- docker_ps(), docker_logs(name), docker_restart(name)
+- gpu_status(), memory_usage(), disk_usage()
+- shell(command) for arbitrary commands
+
+Always diagnose before acting. Use tools via <tool_call> blocks."""
