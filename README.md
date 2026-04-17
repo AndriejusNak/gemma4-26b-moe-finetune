@@ -1,13 +1,35 @@
 # Gemma 4 26B MoE Fine-Tuning on a Single RTX 3090
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![GPU: RTX 3090](https://img.shields.io/badge/GPU-RTX%203090%2024GB-green.svg)](https://www.nvidia.com/)
+[![VRAM: 18.4 GB](https://img.shields.io/badge/Peak%20VRAM-18.4%20GB-orange.svg)](#vram-budget-actual-measurements)
+[![Model: Gemma 4 26B](https://img.shields.io/badge/Model-Gemma%204%2026B%20MoE-red.svg)](https://ai.google.dev/gemma)
+
 > Training a 26-billion parameter Mixture-of-Experts model on consumer hardware —
 > and making it work.
 
-## The Challenge
+## ⚡ Quickstart
 
-Google's `gemma-4-26B-A4B-it` is a 25.81B parameter MoE model with 128 experts per layer, top-8 routing, across 30 transformer layers. The conventional wisdom says you need multiple A100s or H100s to fine-tune this. We did it on a single NVIDIA RTX 3090 (24 GB VRAM).
+```bash
+# Clone
+git clone https://github.com/AndriejusNak/gemma4-26b-moe-finetune.git
+cd gemma4-26b-moe-finetune
 
-## Results
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the full pipeline (requires RTX 3090 24GB or similar)
+python v6_26b_pipeline.py
+```
+
+> **Prerequisites:** NVIDIA GPU with 24 GB VRAM, CUDA 12.8+, Python 3.10+
+
+## 🎯 The Challenge
+
+Google's `gemma-4-26B-A4B-it` is a 25.81B parameter MoE model with 128 experts per layer, top-8 routing, across 30 transformer layers. The conventional wisdom says you need multiple A100s or H100s to fine-tune this. We did it on a single RTX 3090.
+
+## 📊 Results
 
 ### SFT Phase — COMPLETE ✅
 
@@ -61,7 +83,7 @@ SFT COMPLETE — Best loss: 1.2146, Time: 687 min, 0 NaN
 | VRAM | 17.9 GB |
 | ETA | ~13 hours |
 
-## Key Technical Innovations
+## 🔧 Key Technical Innovations
 
 ### 1. Custom NF4 Expert Quantization
 
@@ -135,7 +157,7 @@ Standard DPO: "good answer vs bad answer." Our DPO:
 | `edge_case` | 9 | Typos, empty queries, non-existent services |
 | + 5 more categories | ... | ... |
 
-**Tool corruption augmentation**: Every 3rd HARD sample has correct reasoning but wrong tool call in the rejected sample — teaching **reasoning correctness**, not just output quality. This is agent-level alignment.
+**Tool corruption augmentation**: Every 3rd HARD sample has correct reasoning but wrong tool call in the rejected sample — teaching **reasoning correctness**, not just output quality.
 
 ### 5. Iterative DPO Pipeline
 
@@ -152,7 +174,7 @@ Scripts included:
 - `tool_confusion_matrix.py` — Analyze expected vs actual tool usage → find systematic errors
 - `build_dpo_iteration.py` — Combine datasets with configurable HARD ratio (target: 40-50%)
 
-## Architecture Details
+## 🏗️ Architecture Details
 
 | | |
 |---|---|
@@ -185,11 +207,11 @@ Training peak:                            18.4 GiB
 Headroom:                                  5.6 GiB ✅
 ```
 
-## Training Pipeline (6 Phases)
+## 🚀 Training Pipeline (6 Phases)
 
 ```
 Phase 0: Download & Cache
-  └─ google/gemma-4-26B-A4B-it (~52 GB BF16 safetensors)
+  └─ google/gemma-4-26B-it (~52 GB BF16 safetensors)
 
 Phase 1: SFT with QLoRA                              ✅ COMPLETE
   └─ Manual NF4 expert quantization (11,520 expert matrices)
@@ -216,7 +238,7 @@ Phase 5: Ollama Deploy + Smoke Test
   └─ ollama create → production inference
 ```
 
-## Technical Challenges Solved
+## 🛠️ Technical Challenges Solved
 
 | # | Problem | Solution |
 |---|---------|----------|
@@ -231,17 +253,17 @@ Phase 5: Ollama Deploy + Smoke Test
 | 9 | Ollama safetensors converter crashes | Used llama.cpp `convert_hf_to_gguf.py` pipeline |
 | 10 | HARD overfitting (repeated templates) | Prefix augmentation + dynamic generation from tool × confusion matrix |
 
-## Ops Agent Integration
+## 🤖 Ops Agent Integration
 
 The fine-tuned models power **Janus Auto** — a self-healing AI operations agent:
 
-- 69 tools for infrastructure management (Docker, networking, diagnostics)
-- ReAct agent with native tool calling
-- SmartRouter with 5 routing paths (FSC, MultiTool, InstantTool, Theory, Full)
-- RAG system with Qdrant (17,159 indexed chunks)
-- Lithuanian-first AI assistant for homelab infrastructure
+- 🔧 69 tools for infrastructure management (Docker, networking, diagnostics)
+- 🧠 ReAct agent with native tool calling
+- 🔀 SmartRouter with 5 routing paths (FSC, MultiTool, InstantTool, Theory, Full)
+- 📚 RAG system with Qdrant (17,159 indexed chunks)
+- 🇱🇹 Lithuanian-first AI assistant for homelab infrastructure
 
-## Previous Results (E4B — 8B dense model)
+## 📈 Previous Results (E4B — 8B dense model)
 
 Before tackling the 26B MoE, we fine-tuned the smaller `gemma-4-E4B-it` (8B):
 
@@ -250,7 +272,7 @@ Before tackling the 26B MoE, we fine-tuned the smaller `gemma-4-E4B-it` (8B):
 - Benchmark: **100/100** on internal Hard80 evaluation suite
 - Inference: 31-34 tokens/s on RTX 3060
 
-## Hardware Setup
+## 💻 Hardware Setup
 
 ```
 Server: Ubuntu, 27GB RAM + 33GB swap
@@ -259,7 +281,7 @@ Storage: NVMe SSD
 Model cache: ~52 GB on disk (BF16 safetensors)
 ```
 
-## Version History
+## 📋 Version History
 
 | Version | Key Changes |
 |---------|-------------|
@@ -270,7 +292,7 @@ Model cache: ~52 GB on disk (BF16 safetensors)
 | v24 | Vectorized expert forward (batch-dequant), pinned ref cache |
 | **v25** | **Token-centric forward (2-4× speedup), non_blocking DPO, tool corruption HARD, truncated skip** |
 
-## Files
+## 📁 Files
 
 | File | Description |
 |------|-------------|
@@ -280,7 +302,7 @@ Model cache: ~52 GB on disk (BF16 safetensors)
 | `Modelfile.example` | Ollama Modelfile with calibrated stop tokens |
 | `requirements.txt` | Python dependencies |
 
-## License
+## 📄 License
 
 The training pipeline code is provided for educational purposes. The base model
 (`gemma-4-26B-A4B-it`) is subject to [Google's Gemma license](https://ai.google.dev/gemma/terms).
